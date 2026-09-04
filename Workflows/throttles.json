@@ -1,0 +1,39 @@
+{
+  "global": 30,
+  "iq__21Mqc6ZFaxappjYK6amcHcZfVafQ": {
+    "limit": 5,
+    "workflow_object_id": "iq__21Mqc6ZFaxappjYK6amcHcZfVafQ"
+  },
+  "iq__2qJjsJYhgxWGvgForfxNKvHsdiy5": {
+    "limit": 5,
+    "workflow_object_id": "iq__3igyvjdDHF38caE1v2LULo4TJwj2"
+  },
+  "iq__3THjsLqpWBD4wzaJJWKYWVcA74J4": {
+    "limit": 3,
+    "workflow_object_id": "iq__2mfDr5Kg7QzRqKBGBLP7TJWVBGx3"
+  },
+  "iq__3hTuF3KQCLrTEy3LqMyp8hWKwGw8": {
+    "limit": 3,
+    "workflow_object_id": "iq__kjhDSVGYBDeE3ZZs3aD1VHz7ncq"
+  },
+  "iq__3vMfszbUvJMr4xHu2NHnPTyy2W4F": {
+    "limit": 2,
+    "workflow_object_id": "iq__Zbij8Bd3qUDTZDqS19ceeYZADgG"
+  },
+  "iq__Ev21eZXrgGjRCj6kfkAUe78REBX": {
+    "limit": 1,
+    "workflow_object_id": "iq__34kVQ2cCmdfemDxECYSRoYJtkZ8"
+  },
+  "iq__nnXjSYwt5eKfxpQtN6bG2XYmCCP": {
+    "limit": 3,
+    "workflow_object_id": "iq__2e6T7hMo6kUeufW9NTNULAiKD8PT"
+  },
+  "iq__pS2Z8n1TCkWtNH8mpAa4Z9jZC6Z": {
+    "limit": 1,
+    "workflow_object_id": "iq__2xRups57PpXz6FrYH5G6ZHtgtD61"
+  },
+  "iq__yhMEbY7WTqP3w6zHFyhKhaZxVvM": {
+    "limit": 3,
+    "workflow_object_id": "iq__3e5Ra1rQiTKryBH8ysFnf7oVzk2U"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "heartbeat": 5,
+  "name": "Delete objects or library",
+  "parameters": {
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "delete_library_content": {
+      "default": true,
+      "required": false,
+      "type": "boolean"
+    },
+    "library_id": {
+      "default": null,
+      "required": false,
+      "type": "string"
+    },
+    "object_ids": {
+      "default": [],
+      "required": false,
+      "type": "array"
+    },
+    "private_key": {
+      "required": false,
+      "type": "password"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "#": 1,
+        ".": [
+          {
+            "delete_library": "complete"
+          },
+          {
+            "check_for_library_deletion": "failed"
+          }
+        ]
+      }
+    }
+  },
+  "steps": {
+    "check_for_library_deletion": {
+      "action": {
+        "action": "test",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "library_id": {
+            "class": "parameter",
+            "location": "library_id"
+          }
+        },
+        "parameters": {
+          "code": "(inputs.library_id != null);",
+          "outputs": {},
+          "variables": {
+            "library_id": {
+              "required": "true",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "name": "Check if a library to be deleted was specified",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 5,
+          "max": 5
+        }
+      }
+    },
+    "delete_library": {
+      "action": {
+        "action": "manage_library",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "delete_content": {
+            "class": "parameter",
+            "location": "delete_library_content"
+          },
+          "library_id": {
+            "class": "parameter",
+            "location": "library_id"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          }
+        },
+        "parameters": {
+          "action": "DELETE"
+        }
+      },
+      "name": "Delete objects",
+      "prerequisites": {
+        "#": 2,
+        ".": [
+          {
+            "check_for_library_deletion": "complete"
+          },
+          {
+            "delete_objects": "complete"
+          },
+          {
+            "delete_objects": "failed"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "delete_objects": {
+      "action": {
+        "action": "manage_object",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "object_ids": {
+            "class": "parameter",
+            "location": "object_ids"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          }
+        },
+        "parameters": {
+          "action": "DELETE_MULTIPLE"
+        }
+      },
+      "name": "Delete objects",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    }
+  }
+}

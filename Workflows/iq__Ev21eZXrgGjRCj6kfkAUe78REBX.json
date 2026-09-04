@@ -1,0 +1,144 @@
+{
+  "name": "Top-off MediaRoom Users",
+  "parameters": {
+    "active_users_group_address": {
+      "default": "0x330edfa99934c83ed46dd4958ab9290edc6fb905",
+      "required": false,
+      "type": "string"
+    },
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "delay_hours": {
+      "default": 1,
+      "required": false,
+      "type": "numeric"
+    },
+    "private_key": {
+      "required": false,
+      "type": "string"
+    },
+    "topoff_funds": {
+      "default": 1,
+      "required": false,
+      "type": "numeric"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "topoff_users": "complete"
+      }
+    }
+  },
+  "steps": {
+    "list_active_users": {
+      "action": {
+        "action": "manage_group",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "group_address": {
+            "class": "parameter",
+            "location": "active_users_group_address"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          }
+        },
+        "parameters": {
+          "action": "LIST_MEMBERS"
+        }
+      },
+      "name": "Retrieve the list of active users",
+      "prerequisites": {
+        "wait": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 4
+        }
+      }
+    },
+    "topoff_users": {
+      "action": {
+        "action": "manage_user",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "addresses": {
+            "class": "output",
+            "location": "members",
+            "step_id": "list_active_users"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          },
+          "target_balance": {
+            "class": "parameter",
+            "location": "topoff_funds"
+          }
+        },
+        "parameters": {
+          "action": "TOPOFF"
+        }
+      },
+      "name": "Top-off balance of active user",
+      "prerequisites": {
+        "list_active_users": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "wait": {
+      "action": {
+        "action": "schedule",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "delay_hours": {
+            "class": "parameter",
+            "location": "delay_hours"
+          },
+          "start_now": {
+            "class": "constant",
+            "value": true
+          }
+        },
+        "parameters": {
+          "ongoing": true,
+          "type": "PERIODIC"
+        }
+      },
+      "name": "Wait for specified time",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 20,
+          "max": 3
+        }
+      }
+    }
+  }
+}

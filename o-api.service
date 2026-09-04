@@ -1,0 +1,16 @@
+[Unit]
+Description=o Engine service
+Documentation=https://example.com
+After=network.target
+
+[Service]
+Environment=PRIVATE_KEY=0xsecret1234
+Type=simple
+User=eluvio-O
+WorkingDirectory=/home/eluvio-O/elv-o
+ExecStart=/usr/local/bin/node o.js api-service --o-id=iq__2J7dFzs1wwawyYVZppPuw456yG4S  --config-url=https://demov3.net955210.contentfabric.io/config --verbose --heartbeat-ms=1500
+ExecStop=/usr/local/bin/node o.js stop-api --o-id=iq__2J7dFzs1wwawyYVZppPuw456yG4S --config-url=https://demov3.net955210.contentfabric.io/config --verbose
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
