@@ -1,0 +1,155 @@
+{
+  "name": "Provision MediaRoom User",
+  "parameters": {
+    "accessor_group_address": {
+      "required": true,
+      "type": "string"
+    },
+    "active_users_group_address": {
+      "required": true,
+      "type": "string"
+    },
+    "admin_group_address": {
+      "required": true,
+      "type": "string"
+    },
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "private_key": {
+      "required": false,
+      "type": "string"
+    },
+    "public_library_id": {
+      "required": true,
+      "type": "string"
+    },
+    "room_name": {
+      "required": true,
+      "type": "string"
+    },
+    "seeding_funds": {
+      "default": 1,
+      "required": false,
+      "type": "numeric"
+    },
+    "user_name": {
+      "required": true,
+      "type": "string"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "create_user_repository": "complete"
+      }
+    }
+  },
+  "steps": {
+    "create_user": {
+      "action": {
+        "action": "manage_user",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "active_users_group_address": {
+            "class": "parameter",
+            "location": "active_users_group_address"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "membership_groups": {
+            "class": "parameter",
+            "location": "accessor_group_address",
+            "preprocessing": "input = [input, inputs[\"active_users_group_address\"]]"
+          },
+          "name": {
+            "class": "parameter",
+            "location": "user_name"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          },
+          "seeding_funds": {
+            "class": "parameter",
+            "location": "seeding_funds"
+          }
+        },
+        "parameters": {
+          "action": "CREATE"
+        }
+      },
+      "idle_timeout": 300,
+      "name": "Create MediaRoom user",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "create_user_repository": {
+      "action": {
+        "action": "manage_object",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "description": {
+            "class": "parameter",
+            "location": "user_name",
+            "preprocessing": "input = \"Media repository for \" + input"
+          },
+          "editor_groups": {
+            "class": "parameter",
+            "location": "admin_group_address",
+            "preprocessing": "input = [input]"
+          },
+          "library_id": {
+            "class": "parameter",
+            "location": "public_library_id"
+          },
+          "name": {
+            "class": "parameter",
+            "location": "user_name",
+            "preprocessing": "input = input + \" Media Repository\""
+          },
+          "private_key": {
+            "class": "output",
+            "location": "private_key",
+            "step_id": "create_user"
+          },
+          "visibility": {
+            "class": "constant",
+            "value": 1
+          }
+        },
+        "parameters": {
+          "action": "CREATE"
+        }
+      },
+      "name": "Create public media repository for user",
+      "prerequisites": {
+        "create_user": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    }
+  }
+}

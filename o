@@ -1,0 +1,1 @@
+node o.js service --o-id=iq__2iXNaLVh98yDb1CGinWfN88k6AuG  --job-library-id=ilib3AEGds2KbDrhCG8M6y3WyhdvbJL2  --private-key=0x14b98798d0958b82ba240e25d3f35da28a8ed61ae53d3cf306e529474ecb2f7a    --config-url=https://test.net955203.contentfabric.io/config  --verbose --heartbeat-ms=1500 --persistance=disk

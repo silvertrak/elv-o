@@ -1,0 +1,100 @@
+{
+  "description": "Adds text watermark representing user",
+  "name": "Add watermark",
+  "parameters": {
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "mezzanine_object_id": {
+      "class": "string",
+      "required": true
+    },
+    "offering_name": {
+      "default": "default",
+      "required": false,
+      "type": "string"
+    },
+    "private_key": {
+      "required": false,
+      "type": "string"
+    },
+    "simple_watermark": {
+      "default": {
+        "font_color": "white@0.2",
+        "font_relative_height": 0.015,
+        "shadow": true,
+        "shadow_color": "black@0.15",
+        "template": "$USERNAME",
+        "timecode": "",
+        "timecode_rate": 0,
+        "x": "(w-tw)/100*85",
+        "y": "(h-th)/100*20"
+      },
+      "required": false,
+      "type": "object"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "set_watermark": "complete"
+      }
+    }
+  },
+  "steps": {
+    "set_watermark": {
+      "action": {
+        "action": "manage_watermark",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "downloadable_offering_suffix": {
+            "class": "constant",
+            "value": "_dl"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          },
+          "source_offering": {
+            "class": "constant",
+            "value": "default"
+          },
+          "target_object_id": {
+            "class": "parameter",
+            "location": "mezzanine_object_id"
+          },
+          "target_offering": {
+            "class": "parameter",
+            "location": "offering_name"
+          },
+          "text_watermark": {
+            "class": "parameter",
+            "location": "simple_watermark"
+          }
+        },
+        "parameters": {
+          "action": "SET_WITH_DOWNLOADABLE",
+          "clear_pending_commit": true,
+          "watermark_type": "TEXT"
+        }
+      },
+      "name": "Set simple watermark",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    }
+  }
+}

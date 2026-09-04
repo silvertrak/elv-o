@@ -1,0 +1,111 @@
+{
+  "name": "Non-video ingest",
+  "parameters": {
+    "cloud_access_key_id": {
+      "required": true,
+      "type": "string"
+    },
+    "cloud_bucket": {
+      "required": true,
+      "type": "string"
+    },
+    "cloud_region": {
+      "default": "us-west-2",
+      "required": false,
+      "type": "string"
+    },
+    "cloud_secret_access_key": {
+      "required": true,
+      "type": "string"
+    },
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "files_path": {
+      "required": true,
+      "type": "array"
+    },
+    "mediaroom_private_library_repository_id": {
+      "required": true,
+      "type": "string"
+    },
+    "private_key": {
+      "required": false,
+      "type": "string"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "upload_to_repository": "complete"
+      }
+    }
+  },
+  "steps": {
+    "upload_to_repository": {
+      "action": {
+        "action": "manage_file",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "cloud_access_key_id": {
+            "class": "parameter",
+            "location": "cloud_access_key_id"
+          },
+          "cloud_bucket": {
+            "class": "parameter",
+            "location": "cloud_bucket"
+          },
+          "cloud_region": {
+            "class": "parameter",
+            "location": "cloud_region"
+          },
+          "cloud_secret_access_key": {
+            "class": "parameter",
+            "location": "cloud_secret_access_key"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "encrypt": {
+            "class": "constant",
+            "value": true
+          },
+          "files_path": {
+            "class": "parameter",
+            "location": "files_path"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key"
+          },
+          "target_flattening_base": {
+            "class": "constant",
+            "value": ""
+          },
+          "target_object_id": {
+            "class": "parameter",
+            "location": "mediaroom_private_library_repository_id"
+          }
+        },
+        "parameters": {
+          "action": "UPLOAD",
+          "aws_s3": true
+        }
+      },
+      "name": "Upload S3 files to MediaRoom repository",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    }
+  }
+}

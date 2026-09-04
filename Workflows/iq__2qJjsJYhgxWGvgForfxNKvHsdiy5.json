@@ -1,0 +1,780 @@
+{
+  "description": "Supports 2mono->stereo and 2 channels->stereo, with explicit specification of audio configuration.\nCreates spritesheet for mezzanine content.",
+  "heartbeat": 5,
+  "name": "Ingest v10",
+  "parameters": {
+    "abr_profile": {
+      "default": null,
+      "required": false,
+      "type": "object"
+    },
+    "admin_group": {
+      "required": true,
+      "type": "string"
+    },
+    "asset_type": {
+      "default": "primary",
+      "required": false,
+      "type": "string"
+    },
+    "audio_channel_indexes": {
+      "array_item_type": "numeric",
+      "required": false,
+      "type": "array"
+    },
+    "audio_mapping": {
+      "required": "true",
+      "type": "string",
+      "values": [
+        "",
+        "2MONO_1STEREO",
+        "2CHANNELS_1STEREO",
+        "6MONO_1SURROUND"
+      ]
+    },
+    "audio_stream_indexes": {
+      "array_item_type": "numeric",
+      "required": true,
+      "type": "array"
+    },
+    "audio_stream_label": {
+      "default": "stereo",
+      "required": false,
+      "type": "string"
+    },
+    "cloud_access_key_id": {
+      "required": true,
+      "type": "string"
+    },
+    "cloud_bucket": {
+      "required": true,
+      "type": "string"
+    },
+    "cloud_region": {
+      "default": "us-west-2",
+      "required": false,
+      "type": "string"
+    },
+    "cloud_secret_access_key": {
+      "required": true,
+      "type": "string"
+    },
+    "config_url": {
+      "default": "https://main.net955305.contentfabric.io/config",
+      "required": false,
+      "type": "string"
+    },
+    "ip_title_id": {
+      "required": true,
+      "type": "string"
+    },
+    "master_source_file_paths": {
+      "required": true,
+      "type": "array"
+    },
+    "metadata": {
+      "required": false,
+      "type": "object"
+    },
+    "mezzanines_lib": {
+      "required": true,
+      "type": "string"
+    },
+    "mezzanines_type": {
+      "required": true,
+      "type": "string"
+    },
+    "private_key": {
+      "default": "0xb8a2aa29791d4c316265a478d89e0aa048602b93b5025c7d06be7c2f2c868a0b",
+      "required": false,
+      "type": "string"
+    },
+    "private_key_pool": {
+      "default": {
+        "cluster_type": "random",
+        "cluster_values": [
+          "0x34037fb74d2d00ec0f2dacc9d53c61a5565ed41ba4d9dbf1eca228f038bbadfc",
+          "0x048ce457ceda7009b8d7342a7bfaaabeb75cb516b5f1b73066900c0f90f2291e",
+          "0x1aa9bfd9c994bf6d78b63795b138b38fb47584a1c6b343a39d69956ff3a88af9"
+        ]
+      },
+      "required": false,
+      "type": "password"
+    },
+    "secondary_audio": {
+      "default": false,
+      "required": false,
+      "type": "boolean"
+    },
+    "secondary_audio_channel_indexes": {
+      "array_item_type": "numeric",
+      "required": false,
+      "type": "array"
+    },
+    "secondary_audio_mapping": {
+      "required": "false",
+      "type": "string",
+      "values": [
+        "",
+        "2MONO_1STEREO",
+        "2CHANNELS_1STEREO",
+        "6MONO_1SURROUND"
+      ]
+    },
+    "secondary_audio_stream_indexes": {
+      "array_item_type": "numeric",
+      "required": false,
+      "type": "array"
+    },
+    "secondary_audio_stream_label": {
+      "default": "surround",
+      "required": false,
+      "type": "string"
+    },
+    "title": {
+      "required": true,
+      "type": "string"
+    },
+    "title_type": {
+      "default": "feature",
+      "required": false,
+      "type": "string"
+    }
+  },
+  "states": {
+    "complete": {
+      "job_status_code": 100,
+      "prerequisites": {
+        "create_spritesheet": "complete"
+      }
+    }
+  },
+  "steps": {
+    "check_secondary_audio": {
+      "action": {
+        "action": "test",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "secondary_audio": {
+            "class": "parameter",
+            "location": "secondary_audio"
+          }
+        },
+        "parameters": {
+          "code": "(inputs[\"secondary_audio\"] == true)",
+          "variables": {
+            "secondary_audio": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "name": "Check if a secondary audio is provided",
+      "prerequisites": {
+        "#": 1,
+        ".": [
+          {
+            "remove_default_audio": "complete"
+          },
+          {
+            "remove_default_audio": "failed"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 30,
+          "max": 5
+        }
+      }
+    },
+    "create_ladder": {
+      "action": {
+        "action": "create_ladder",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "drm_optional": {
+            "class": "constant",
+            "value": false
+          },
+          "master_object_id": {
+            "class": "output",
+            "location": "production_master_object_id",
+            "step_id": "create_master"
+          },
+          "playout_formats": {
+            "class": "constant",
+            "value": [
+              "dash-widevine",
+              "hls-fairplay"
+            ]
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          }
+        },
+        "parameters": {
+          "input_type": "master_object_id"
+        }
+      },
+      "name": "Create video ladder",
+      "prerequisites": {
+        "#": 1,
+        ".": [
+          {
+            "create_master": "complete"
+          },
+          {
+            "create_master": "failed"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "create_master": {
+      "action": {
+        "action": "create_production_master",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "cloud_access_key_id": {
+            "class": "parameter",
+            "location": "cloud_access_key_id"
+          },
+          "cloud_bucket": {
+            "class": "parameter",
+            "location": "cloud_bucket"
+          },
+          "cloud_region": {
+            "class": "parameter",
+            "location": "cloud_region"
+          },
+          "cloud_secret_access_key": {
+            "class": "parameter",
+            "location": "cloud_secret_access_key"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "content_admins_group": {
+            "class": "parameter",
+            "location": "admin_group"
+          },
+          "ip_title_id": {
+            "class": "parameter",
+            "location": "ip_title_id"
+          },
+          "master_source_file_paths": {
+            "class": "parameter",
+            "location": "master_source_file_paths"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "production_master_object_id": {
+            "class": "output",
+            "location": "object_id",
+            "step_id": "create_mezz_object"
+          },
+          "s3_copy": {
+            "class": "constant",
+            "value": false
+          },
+          "s3_reference": {
+            "class": "constant",
+            "value": true
+          },
+          "title": {
+            "class": "parameter",
+            "location": "title"
+          }
+        },
+        "parameters": {
+          "aws_s3": true
+        }
+      },
+      "idle_timeout": 180,
+      "name": "Create production master from S3",
+      "prerequisites": {
+        "create_mezz_object": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "create_mezz_object": {
+      "action": {
+        "action": "manage_object",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "content_type": {
+            "class": "parameter",
+            "location": "mezzanines_type"
+          },
+          "editor_groups": {
+            "class": "parameter",
+            "location": "admin_group",
+            "preprocessing": "input = [input]"
+          },
+          "ip_title_id": {
+            "class": "parameter",
+            "location": "ip_title_id"
+          },
+          "library_id": {
+            "class": "parameter",
+            "location": "mezzanines_lib"
+          },
+          "metadata": {
+            "class": "parameter",
+            "location": "metadata"
+          },
+          "name": {
+            "class": "constant",
+            "preprocessing": "input = inputs.title + \" PRE\";",
+            "value": " PRE"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "title": {
+            "class": "parameter",
+            "location": "title"
+          }
+        },
+        "parameters": {
+          "action": "CREATE"
+        }
+      },
+      "name": "Create object for the mezzanine",
+      "prerequisites": {},
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "create_mezzanine": {
+      "action": {
+        "action": "create_mezzanine",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "abr_profile": {
+            "class": "output",
+            "location": "ladder",
+            "preprocessing": "input = inputs.forced_abr_profile || input",
+            "step_id": "create_ladder"
+          },
+          "asset_type": {
+            "class": "parameter",
+            "location": "asset_type"
+          },
+          "cloud_access_key_id": {
+            "class": "parameter",
+            "location": "cloud_access_key_id"
+          },
+          "cloud_bucket": {
+            "class": "parameter",
+            "location": "cloud_bucket"
+          },
+          "cloud_region": {
+            "class": "parameter",
+            "location": "cloud_region"
+          },
+          "cloud_secret_access_key": {
+            "class": "parameter",
+            "location": "cloud_secret_access_key"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "downloadable_offering_suffix": {
+            "class": "constant",
+            "value": "_dl"
+          },
+          "forced_abr_profile": {
+            "class": "parameter",
+            "location": "abr_profile"
+          },
+          "ip_title_id": {
+            "class": "parameter",
+            "location": "ip_title_id"
+          },
+          "metadata": {
+            "class": "parameter",
+            "location": "metadata"
+          },
+          "mezzanine_object_id": {
+            "class": "output",
+            "location": "object_id",
+            "step_id": "create_mezz_object"
+          },
+          "mezzanines_lib": {
+            "class": "parameter",
+            "location": "mezzanines_lib"
+          },
+          "mezzanines_type": {
+            "class": "parameter",
+            "location": "mezzanines_type"
+          },
+          "name": {
+            "class": "constant",
+            "preprocessing": "input = inputs.title + \" MEZZ\";",
+            "value": " MEZZ"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "production_master_version_hash": {
+            "class": "output",
+            "location": "production_master_version_hash",
+            "step_id": "setup_audio"
+          },
+          "title": {
+            "class": "parameter",
+            "location": "title"
+          },
+          "title_type": {
+            "class": "parameter",
+            "location": "title_type"
+          },
+          "variant": {
+            "class": "constant",
+            "value": "default"
+          }
+        },
+        "parameters": {
+          "add_downloadable_offering": true,
+          "aws_s3": true,
+          "incomplete_tolerance": 99
+        }
+      },
+      "idle_timeout": 180,
+      "name": "Create mezzanine file from production master",
+      "prerequisites": {
+        "#": 2,
+        ".": [
+          {
+            "setup_audio": "complete"
+          },
+          {
+            "setup_audio": "failed"
+          },
+          {
+            "create_ladder": "complete"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "create_spritesheet": {
+      "action": {
+        "action": "create_spritesheet",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "mezzanine_object_id": {
+            "class": "output",
+            "location": "mezzanine_object_id",
+            "step_id": "create_mezzanine"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "target_thumb_count": {
+            "class": "constant",
+            "value": 97
+          }
+        },
+        "parameters": {}
+      },
+      "idle_timeout": 300,
+      "name": "Create Sprite-sheet for Mezzanine content",
+      "prerequisites": {
+        "create_mezzanine": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "remove_default_audio": {
+      "action": {
+        "action": "variant_edit_stream",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "production_master_object_id": {
+            "class": "output",
+            "location": "production_master_object_id",
+            "step_id": "create_master"
+          },
+          "stream_key": {
+            "class": "constant",
+            "value": "audio"
+          },
+          "variant_key": {
+            "class": "constant",
+            "value": "default"
+          }
+        },
+        "parameters": {
+          "action": "REMOVE"
+        }
+      },
+      "name": "Remove default generated audio",
+      "prerequisites": {
+        "#": 1,
+        ".": [
+          {
+            "create_master": "complete"
+          },
+          {
+            "create_master": "failed"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "setup_audio": {
+      "action": {
+        "action": "variant_edit_stream",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "channel_indexes": {
+            "class": "parameter",
+            "location": "audio_channel_indexes"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "edit_if_present": {
+            "class": "constant",
+            "value": true
+          },
+          "file": {
+            "class": "parameter",
+            "location": "master_source_file_paths",
+            "preprocessing": "input = path.basename(decodeURIComponent(input[0]))"
+          },
+          "label": {
+            "class": "parameter",
+            "location": "audio_stream_label"
+          },
+          "mapping": {
+            "class": "parameter",
+            "location": "audio_mapping"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "production_master_object_id": {
+            "class": "output",
+            "location": "production_master_object_id",
+            "step_id": "create_master"
+          },
+          "stream_indexes": {
+            "class": "parameter",
+            "location": "audio_stream_indexes"
+          },
+          "stream_key": {
+            "class": "parameter",
+            "location": "audio_stream_label"
+          },
+          "variant_key": {
+            "class": "constant",
+            "value": "default"
+          }
+        },
+        "parameters": {
+          "action": "ADD"
+        }
+      },
+      "name": "Set-up audio configuration",
+      "prerequisites": {
+        "#": 1,
+        ".": [
+          {
+            "setup_secondary_audio": "complete"
+          },
+          {
+            "check_secondary_audio": "failed"
+          }
+        ]
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    },
+    "setup_secondary_audio": {
+      "action": {
+        "action": "variant_edit_stream",
+        "type": "node-js"
+      },
+      "configuration": {
+        "inputs": {
+          "channel_indexes": {
+            "class": "parameter",
+            "location": "secondary_audio_channel_indexes"
+          },
+          "config_url": {
+            "class": "parameter",
+            "location": "config_url"
+          },
+          "edit_if_present": {
+            "class": "constant",
+            "value": true
+          },
+          "file": {
+            "class": "parameter",
+            "location": "master_source_file_paths",
+            "preprocessing": "input = path.basename(decodeURIComponent(input[0]))"
+          },
+          "label": {
+            "class": "parameter",
+            "location": "secondary_audio_stream_label"
+          },
+          "mapping": {
+            "class": "parameter",
+            "location": "secondary_audio_mapping"
+          },
+          "private_key": {
+            "class": "parameter",
+            "location": "private_key",
+            "preprocessing": "input = input || inputs.private_key_pool"
+          },
+          "private_key_pool": {
+            "class": "parameter",
+            "location": "private_key_pool"
+          },
+          "production_master_object_id": {
+            "class": "output",
+            "location": "production_master_object_id",
+            "step_id": "create_master"
+          },
+          "stream_indexes": {
+            "class": "parameter",
+            "location": "secondary_audio_stream_indexes"
+          },
+          "stream_key": {
+            "class": "parameter",
+            "location": "secondary_audio_stream_label"
+          },
+          "variant_key": {
+            "class": "constant",
+            "value": "default"
+          }
+        },
+        "parameters": {
+          "action": "ADD"
+        }
+      },
+      "name": "Set-up secondary audio configuration",
+      "prerequisites": {
+        "check_secondary_audio": "complete"
+      },
+      "retries": {
+        "exception": {
+          "delay": 60,
+          "max": 5
+        }
+      }
+    }
+  }
+}
