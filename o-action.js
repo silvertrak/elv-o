@@ -7,7 +7,7 @@ const ElvOJob = require("./o-job.js");
 
 
 class ElvOAction extends ElvOFabricClient {
-    
+
     constructor(params) {
         super();
         if (params.client) {
@@ -24,9 +24,9 @@ class ElvOAction extends ElvOFabricClient {
             this.expandParameters();
         }
     };
-    
+
     Error(label, err) {
-        console.error(label, err);       
+        console.error(label, err);
         if (!err) {
             this.reportProgress("ERROR-" + label)
         } else {
@@ -45,24 +45,24 @@ class ElvOAction extends ElvOFabricClient {
                     this.logStack(err.stack.split("\n"));
                 }
             } else {
-                ElvOAction.trackProgress(ElvOAction.TRACKER_INTERNAL, "ERROR-" +msg, data); 
+                ElvOAction.trackProgress(ElvOAction.TRACKER_INTERNAL, "ERROR-" +msg, data);
             }
         }
     };
-    
+
     Debug(msg, data) {
         console.debug(msg, data);
         try {
         if (this) {
-            this.reportProgress("DEBUG-" + msg, data); 
+            this.reportProgress("DEBUG-" + msg, data);
         } else {
-            ElvOAction.trackProgress(ElvOAction.TRACKER_INTERNAL, "DEBUG-" + msg, data); 
+            ElvOAction.trackProgress(ElvOAction.TRACKER_INTERNAL, "DEBUG-" + msg, data);
         }
     } catch(err) {
         console.error("Could not log Debug entry", err);
     }
     };
-    
+
     Info(msg, data) {
         console.log(msg, data);
         this.reportProgress("INFO-" + msg, data);
@@ -71,40 +71,39 @@ class ElvOAction extends ElvOFabricClient {
     Version() {
         return this.constructor.VERSION;
     };
-    
+
     Parameters() {
         return {parameters: {}}; //should be overloaded with parameters required
     };
-    
+
     IOs(parameters) {
         return {inputs: {}, outputs: {}}; //should be overloaded with parameters required
     };
-    
+
     ActionId() {
         return "generic"; //should be overloaded with actual action name i.e.: ffprobe, test ...
     };
-    
+
     Description() {
         return ""; //should be overloaded with actual action description...
     };
-    
+
     IsContinuous() {
         return true; //indicates that the execution stays within a single PID
     };
-    
+
     PollingInterval() {
         return 5;
     };
-    
+
     IdleTimeout() {
         return null;
     };
-    
+
     async Execute(handle, outputs) {
         return 100;
     };
-    
-    //progressCode => {state, details, time_stamp};
+
     progressMessage() {
         if (this.Tracker) {
             let progressTracker = this.Tracker[ElvOAction.TRACKER_PROGRESS];
@@ -149,8 +148,8 @@ class ElvOAction extends ElvOFabricClient {
         }
         return {message: "No tracking information yet", time_stamp: (new Date()).toISOString()};
     };
-    
-    
+
+
     static GetProgressMessage(jobId, stepId, attempt) {
         let trackerPath = ElvOAction.GetTrackerPath(jobId, stepId, attempt);
         let tracker = ElvOAction.readTracker(trackerPath);
@@ -172,9 +171,9 @@ class ElvOAction extends ElvOFabricClient {
         }
         return {message: "No tracking information yet", time_stamp: (new Date()).toISOString()};
     };
-    
-    
-    
+
+
+
     static GetPid(jobId, stepId, handle) {
         let trackerPath = ElvOAction.GetTrackerPath(jobId, stepId, handle);
         let tracker = ElvOAction.readTracker(trackerPath);
@@ -185,7 +184,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return null;
     };
-    
+
     parseDynamicVariables(expression, variablesDesc) {
         if (!variablesDesc) {
             variablesDesc = {};
@@ -202,7 +201,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return dynamicVariables;
     };
-    
+
     static readTracker(trackerPath) {
         let tracker = {};
         if (fs.existsSync(trackerPath)) {
@@ -228,7 +227,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return tracker;
     };
-    
+
     initializeTracker(starting) {
         if (!this.Attempts && (this.Attempts != 0)) {
             console.warn("Warning initializing tracker", new Error("this.Attempts not found"));
@@ -246,7 +245,7 @@ class ElvOAction extends ElvOFabricClient {
         this.Tracker = ElvOAction.readTracker(this.TrackerPath);
         return this.TrackerPath;
     };
-    
+
     trackProgress(progressCode, statusMsg, details) {
         try {
             let timestamp = (new Date()).toISOString();
@@ -293,16 +292,16 @@ class ElvOAction extends ElvOFabricClient {
             console.error("Could not trackProgress internally - " + lines[0], err);
         }
     };
-    
-    
+
+
     static GetTrackerPath(jobId, stepId, attempt) {
         return ElvOJob.StepTrackerPathSync(jobId, stepId, attempt);
     };
-    
+
     trackerPath() {
         return ElvOJob.StepTrackerPathSync(this.JobId, this.StepId, this.Attempts);
     };
-    
+
     expandParameters() {
         if (!this.Payload.parameters) {
             this.Payload.parameters = {};
@@ -328,9 +327,9 @@ class ElvOAction extends ElvOFabricClient {
             }
         }
     };
-    
-    
-    
+
+
+
     expandDynamicVariables(inputs, expression, variablesDesc) {
         let expectedInputsSpec = variablesDesc || {}; //this.parseDynamicVariables(expression, variablesDesc); //only explicit definitions
         let expectedInputs = Object.keys(expectedInputsSpec);
@@ -357,7 +356,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return JSON.parse(expandedExpression);
     };
-    
+
     async validateInputs(errors) {
         let expectedInputsSpec = this.IOs(this.Payload.parameters).inputs;
         let inputs = this.Payload.inputs;
@@ -383,7 +382,7 @@ class ElvOAction extends ElvOFabricClient {
                     let inputSpec = expectedInputsSpec[i];
                     let input = inputs[i];
                     if (input && ((typeof input) == "object") && (input.cluster_type)) {
-                        
+
                         if (input.cluster_type == "round-robin") {
                             console.error("Round robin cluster type not implemented, using random mode instead");
                             input.cluster_type = "random";
@@ -414,16 +413,16 @@ class ElvOAction extends ElvOFabricClient {
                     console.error("Could not validate input " + i, err);
                 }
             }
-            
+
             return true;
         } else {
             this.Error("Inputs validation errors", errors);
             return false;
         }
     };
-    
-    
-    
+
+
+
     static async InitializeArgs(actionClass, payload, client) {
         let action = new actionClass({client: client, payload: payload});
         action.JobId = payload.references && payload.references.job_id;
@@ -432,8 +431,8 @@ class ElvOAction extends ElvOFabricClient {
         actionObj.RetryDelay = payload.retry_delay;
         return action;
     };
-    
-    
+
+
     //outputs go into statusData.outputs, function return true if job is still running, false if it is terminated (successfully or otherwise)
     async MonitorExecution(pid, outputs) { //default is for continuous execution
         if (pid && !ElvOAction.PidRunning(pid)) {
@@ -449,8 +448,8 @@ class ElvOAction extends ElvOFabricClient {
             return ElvOAction.EXECUTION_ONGOING;
         }
     }
-    
-    
+
+
     async checkStatus() {
         let statusData = {
             status: {},
@@ -462,7 +461,7 @@ class ElvOAction extends ElvOFabricClient {
                 let info = ElvOJob.GetStepInfoSync(this.JobId, this.StepId);
                 let pid = info && info.pid;
                 //let libraryId = await this.getLibraryId(jobId); //DO NOT REMOVE, Library can not be retrieved after MonitorExecution (uncatchable exception)
-                
+
                 executionCode = await this.MonitorExecution(pid, statusData.outputs);
                 if (ElvOAction.isFinal(executionCode)) {
                     if (!this.IsContinuous() || (executionCode == ElvOAction.EXECUTION_EXCEPTION)) { //if continuous, exception indicate killed process without 436-up
@@ -474,19 +473,19 @@ class ElvOAction extends ElvOFabricClient {
                 } else {
                     statusData.pid = pid;
                 }
-            } 
+            }
             statusData.status.code = executionCode || ElvOAction.EXECUTION_ONGOING;
             statusData.status.state = ElvOAction.EXECUTION_STATUSES[executionCode] || "ongoing";
             statusData.progress = this.progressMessage();
-            
+
         } catch (err) {
             console.error("Error encountered while checking status", err);
             this.reportProgress("Error encountered while checking status", err);
         }
         return statusData;
     };
-    
-    
+
+
     getExecutionInformation() {
         let initializationMark = this.Tracker[ElvOAction.TRACKER_INITIATED];
         if (initializationMark) {
@@ -500,8 +499,8 @@ class ElvOAction extends ElvOFabricClient {
             return null;
         }
     }
-    
-    
+
+
     reportProgress(message, details, max_frequency) {
         try {
             if (max_frequency) {
@@ -516,17 +515,17 @@ class ElvOAction extends ElvOFabricClient {
             console.error("Could not report progress message: " + message, err);
         }
     };
-    
+
     ReportProgress(message, details) {
         //details could be parsed to ensure it fits
         this.trackProgress(ElvOAction.TRACKER_PROGRESS, message, details);
     };
-    
+
     markExecuted(executionCode) {
         let finalState = ElvOAction.EXECUTION_STATUSES[executionCode];
         this.trackProgress(ElvOAction.TRACKER_EXECUTED, finalState, executionCode);
     };
-    
+
     getExecutionCode() {
         let finalized = this.Tracker[ElvOAction.TRACKER_FINALIZED];
         if (finalized) {
@@ -534,18 +533,18 @@ class ElvOAction extends ElvOFabricClient {
         }
         return null;
     };
-    
+
     markFinalized() {
         this.trackProgress(ElvOAction.TRACKER_FINALIZED, "Status saved");
     }
-    
-    
+
+
     async wrapUpExecution(outputs, executionCode) {
         let jobId = this.JobId;
         let stepId = this.StepId;
         let maxAttempts = this.MaxAttempts;
         console.debug("Wrap-up step " + stepId + " (" + jobId + ")", {executionCode, attempts: this.Attempts});
-        
+
         if (executionCode >= 0) {
             try {
                 if (executionCode == ElvOAction.EXECUTION_COMPLETE_TO_BE_CLONED) {
@@ -558,7 +557,7 @@ class ElvOAction extends ElvOFabricClient {
                     }
                     executionCode = ElvOAction.EXECUTION_COMPLETE;
                 }
-                
+
                 this.markExecuted(executionCode);
                 if (outputs) {
                     if (executionCode > 0) {
@@ -611,7 +610,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return executionCode;
     };
-    
+
     static isFinal(executionCode) {
         let finalState = this.EXECUTION_STATUSES[executionCode];
         if (finalState) {
@@ -620,12 +619,12 @@ class ElvOAction extends ElvOFabricClient {
             return false;
         }
     };
-    
+
     static async ExecuteSyncCmd(action, retry) {
         let errors = {};
         let jobId = action.JobId;
         let stepId = action.StepId;
-        
+
         let maxAttempts = action.MaxAttempts;
         let data;
         if (retry) {
@@ -646,10 +645,10 @@ class ElvOAction extends ElvOFabricClient {
             process.exit(1);
         }*/
         action.trackProgress(ElvOAction.TRACKER_INITIATED, "Started v"+action.Version(), process.pid + "," + stepId + "," + jobId);
-        
+
         if (await action.validateInputs(errors)) {
             let outputs = {};
-            
+
             let executionCode;
             try {
                 executionCode = await action.Execute(new Date().getTime().toString(), outputs);
@@ -672,13 +671,13 @@ class ElvOAction extends ElvOFabricClient {
             return await action.wrapUpExecution(null, ElvOAction.EXECUTION_EXCEPTION); //no point in retrying for invalid inputs
         }
     };
-    
-    
+
+
     static async ExecuteStandaloneCmd(action) {
         throw "need to be re-implemented";
     };
-    
-    
+
+
     static async SpecsCmd(action) {
         if (!action.Payload || Object.keys(action.Payload).length == 0) {
             return {description: action.Description(), parameters: action.Parameters().parameters};
@@ -698,7 +697,7 @@ class ElvOAction extends ElvOFabricClient {
             return spec
         }
     };
-    
+
     static instantiateAction(payload, client) {
         if (!ElvOAction.Actions) {
             ElvOAction.Actions = {};
@@ -711,12 +710,12 @@ class ElvOAction extends ElvOFabricClient {
         let action = new actionClass({client: client, payload: payload});
         return action;
     };
-    
+
     static async Launch(payload, client) {
         let action = this.instantiateAction(payload, client);
-        action.initializeTracker(); 
+        action.initializeTracker();
         ElvOJob.SaveStepPayloadSync(action.JobId, action.StepId, payload);
-        
+
         let errors = {};
         if (await action.validateInputs(errors)) {
             let actionEnv = process.env; //{...process.env, "PAYLOAD": payloadStr, "PERSISTENCE": action.Persistence};
@@ -740,7 +739,7 @@ class ElvOAction extends ElvOFabricClient {
             return {pid: null, errors: {input_validation: errors}};
         }
     };
-    
+
     static async CheckStatus(jobId, stepId, attempts, client) {
         let payload = ElvOJob.RetrievePayloadSync(jobId, stepId);
         let action = this.instantiateAction(payload, client);
@@ -760,7 +759,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         actionStatus.max_attempts = payload.max_attempts;
         actionStatus.retry_delay = payload.retry_delay;
-        
+
         let idleTimeout = actionStatus.idle_timeout || ElvOAction.MAX_IDLE_TIMEOUT; // no null value, so negative is 0, which is considered no timeout (MAX_IDLE_TIMEOUT)
         if (actionStatus.status.code == ElvOAction.EXECUTION_ONGOING) {
             let foundTimestamp = (new Date(actionStatus.progress.time_stamp)).getTime();
@@ -770,7 +769,7 @@ class ElvOAction extends ElvOFabricClient {
                 actionStatus.status.code = action.wrapUpExecution({}, ElvOAction.EXECUTION_EXCEPTION);
             }
         }
-        
+
         let actionPid = actionStatus.pid;
         if (actionStatus.progress.message == "No tracking information yet") {
             if (!ElvOAction.ActionPid[jobId+stepId+actionPid]) {
@@ -803,7 +802,7 @@ class ElvOAction extends ElvOFabricClient {
         actionStatus.attempts = action.Attempts;
         return actionStatus;
     };
-    
+
     static async CheckStatusCmd(action) {
         action.initializeTracker();
         let actionStatus = await action.checkStatus();
@@ -812,24 +811,24 @@ class ElvOAction extends ElvOFabricClient {
         }
         return actionStatus;
     };
-    
+
     static ActionClassName(action) {
         let fullName = "action_" + action;
         return "ElvO" + fullName.replace(/_/g, " ").replace(/(?:^\w|[A-Z]|\b\w)/g, function (word) {
             return word.toUpperCase()
         }).replace(/\s+/g, '');
     };
-    
+
     static executeCommandLine(actionClass) {
         let filename = "action_" + new actionClass({}).ActionId() + ".js";
         let runScript = process.argv[1].replace(/.*\//, '');
         return (filename == runScript);
     };
-    
+
     static PidRunning(pid) {
         return ElvOProcess.PidRunning(pid);
     }
-    
+
     static Kill(pid) {
         try {
             process.kill(pid, 9);
@@ -838,7 +837,7 @@ class ElvOAction extends ElvOFabricClient {
         }
         return !ElvOProcess.PidRunning(pid);
     }
-    
+
     getPersistedData(scope) {
         if (!scope) {
             scope = this.Payload.parameters.persistence_scope || ElvOAction.PERSISTENCE_GROUP;
@@ -851,7 +850,7 @@ class ElvOAction extends ElvOFabricClient {
             return null;
         }
     };
-    
+
     persistData(data, scope) {
         if (!scope) {
             scope = this.Payload.parameters.persistence_scope || ElvOAction.PERSISTENCE_GROUP;
@@ -862,7 +861,7 @@ class ElvOAction extends ElvOFabricClient {
         fs.writeFileSync(filePath, JSON.stringify(updatedData), {encoding: 'utf8'});
         return updatedData;
     };
-    
+
     persistenceFilePath(scope) {
         if (!scope) {
             scope = this.Payload.parameters.persistence_scope || ElvOAction.PERSISTENCE_GROUP;
@@ -876,7 +875,7 @@ class ElvOAction extends ElvOFabricClient {
             action_name: this.ActionId()
         });
     };
-    
+
     static persistenceFilePath({scope, group_reference, workflow_id, job_id, step_id, action_name}) {
         if (!this.PersistenceRoot) {
             this.PersistenceRoot = "./Store";
@@ -902,7 +901,7 @@ class ElvOAction extends ElvOFabricClient {
             return path.join(this.PersistenceRoot, "a_" + action_name + ".json");
         }
     };
-    
+
     static GetSpec({file, actionId, force, parameters}) {
         if (!force && this.Actions && this.Actions[actionId] && !parameters) {
             return this.Actions[actionId];
@@ -929,7 +928,7 @@ class ElvOAction extends ElvOFabricClient {
             return null;
         }
     };
-    
+
     static List(force) {
         if (force || !this.Actions) {
             this.Actions = {};
@@ -969,8 +968,8 @@ class ElvOAction extends ElvOFabricClient {
         }
         return true;
       };
-    
-    
+
+
     static async Run(actionClass) {
         let result;
         try {
@@ -997,7 +996,7 @@ class ElvOAction extends ElvOFabricClient {
                 result = await this.ExecuteSyncCmd(action, retry);
                 process.exit((result == ElvOAction.EXECUTION_EXCEPTION_COMPLETE) ? 0 : result);
             }
-            
+
             if (command == "launch") {
                 let payloadStr = ElvOProcess.getValueInArgv("payload") || "{}";
                 let payload;
@@ -1049,13 +1048,13 @@ class ElvOAction extends ElvOFabricClient {
                 let action = new actionClass({payload, client});
                 action.Attempts = 0;
                 action.TrackerPath = "/tmp/" + payload.references.step_id + ".log";
-                
+
                 result = await this.CheckStatusCmd(action);
             }
-            
+
             if (command == "execute") {
                 let payloadStr = ElvOProcess.getValueInArgv("payload") || "{}";
-                
+
                 let payload;
                 let matcher = payloadStr.match(/^@(.*)/);
                 if (matcher){
@@ -1103,12 +1102,12 @@ class ElvOAction extends ElvOFabricClient {
                 }
                 console.error({payload, execution_code: result, log_path: action.TrackerPath, result_path: "/tmp/"+payload.references.step_id + ".json", payload_path: payloadFilePath});
             }
-            
+
         } catch (err) {
             console.error("Top level action execution error", err);
             result = {ERROR: err};
         }
-        
+
         process.stdout.write(JSON.stringify(result), () => {
             console.error("\n");
             process.exit(0);
@@ -1117,7 +1116,7 @@ class ElvOAction extends ElvOFabricClient {
     };
 
     static ActionPid = {};
-    
+
     static PERSISTENCE_WORKFLOW = "workflow";
     static PERSISTENCE_WORKFLOW_STEP = "workflow-step";
     static PERSISTENCE_NONE = "none";
@@ -1125,14 +1124,14 @@ class ElvOAction extends ElvOFabricClient {
     static PERSISTENCE_GROUP = "group";
     static PERSISTENCE_ABSOLUTE = "absolute";
     static PERSISTENCE_SCOPES = [ElvOAction.PERSISTENCE_WORKFLOW, ElvOAction.PERSISTENCE_WORKFLOW_STEP, ElvOAction.PERSISTENCE_NONE, ElvOAction.PERSISTENCE_ACTION, ElvOAction.PERSISTENCE_GROUP, ElvOAction.PERSISTENCE_ABSOLUTE];
-    
+
     static TRACKER_INITIATED = 10;
     static TRACKER_PROGRESS = 50;
     static TRACKER_EXECUTED = 80;
     static TRACKER_FINALIZED = 100;
     static TRACKER_INTERNAL = 20;
     static TRACKER_ERROR_STACK = 25;
-    
+
     static EXECUTION_ONGOING = 10;
     static EXECUTION_EXCEPTION = -1;
     static EXECUTION_FATAL_EXCEPTION = -2; //Non retryable - not supported yet
@@ -1140,7 +1139,7 @@ class ElvOAction extends ElvOFabricClient {
     static EXECUTION_COMPLETE = 100;
     static EXECUTION_EXCEPTION_TO_BE_RETRIED = -10;
     static EXECUTION_COMPLETE_TO_BE_CLONED = 110; //For triggers - not supported yet
-    
+
     static EXECUTION_STATUSES = {'-1': "Exception", '-5': "Canceled", 99: "Failed", 100: "Complete", 110: "Triggered"};
     static STATUS_LABEL = {
         10: "Started",
@@ -1152,12 +1151,12 @@ class ElvOAction extends ElvOFabricClient {
         110: "Triggered",
         1: "Initialized"
     };
-    
+
     static PROD_CONFIG_URL = "https://main.net955305.contentfabric.io/config";
     static DEFAULT_IDLE_TIMEOUT = 60; //in seconds
     static MAX_IDLE_TIMEOUT = 7 * 24 * 3600; //A week in seconds
     static DEFAULT_RETRY_DELAY = 15; //in seconds
-    
+
     static VERSION = "0.0.1";
 };
 

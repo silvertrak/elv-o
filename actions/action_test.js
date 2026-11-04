@@ -1,7 +1,5 @@
 const ElvOAction = require("../o-action").ElvOAction;
 
-
-
 class ElvOActionTest extends ElvOAction  {
 
     Parameters() {
@@ -18,8 +16,6 @@ class ElvOActionTest extends ElvOAction  {
     ActionId() {
         return "test";
     };
-
-
 
     async Execute(handle, outputs) {
         let inputs = this.Payload.inputs;
@@ -93,9 +89,4 @@ Command check-status
   handle: '1611969099162',
   execution_node: ''
 }
-
-
-
-
-
  */

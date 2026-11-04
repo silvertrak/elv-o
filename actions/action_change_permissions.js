@@ -1,7 +1,5 @@
-
 const ElvOAction = require("../o-action").ElvOAction;
 const ElvOFabricClient = require("../o-fabric");
-
 
 class ElvOActionChangePermissions extends ElvOAction  {
 
